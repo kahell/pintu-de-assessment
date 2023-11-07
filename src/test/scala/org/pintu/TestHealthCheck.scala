@@ -1,5 +1,6 @@
 package scala.org.pintu
 
+import org.pintu.HealthCheck
 import org.scalatest.funsuite.AnyFunSuite
 
 class HealthCheckTest extends AnyFunSuite {
