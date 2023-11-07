@@ -37,3 +37,7 @@ This documentation will explain step by step to completed the assessment.
     /path/to/your/jar/pintu-de-assesment-1.0-SNAPSHOT.jar
     ```
 7. Verify the data using scripts/consumer/read_data.ipynb
+
+# Unit Test
+1. Goto `/src/test/scala/org/pintu`
+2. Run that test
