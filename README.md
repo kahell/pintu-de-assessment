@@ -20,6 +20,9 @@ This documentation will explain step by step to completed the assessment.
         ```
         docker-compose exec kafka kafka-topics --create --topic technical_assessment --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
         ```
+    - order_book
+        ```
+        docker-compose exec kafka kafka-topics --create --topic order_book --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1
 4. Create Schema Registry
     ```
     python3 scripts/producer/generate_schema.py

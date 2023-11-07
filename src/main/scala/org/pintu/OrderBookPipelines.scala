@@ -131,22 +131,71 @@ object OrderBookPipelines {
             col("size").alias("amount"), // Assuming you meant "size" as the original field for "amount"
             col("total"),
             col("cum_sum"),
-            col("date_partition")
+//            col("date_partition")
           )
 
-        // Then write the sorted batch to a sink, for example, to parquet files
+        // After processing, write the result DataFrame to a Kafka topic
+        val kafkaOutputTopic = "order_book"
+        val kafkaBootstrapServers = "localhost:9092" // Replace with your Kafka bootstrap servers
+
         selectedBatchDF
+          .selectExpr("to_json(struct(*)) AS value") // Convert the DataFrame to a JSON string
           .write
-          .mode("append")
-          .format("parquet")
-          .option("path", outputPath)
-          .option("compression", "snappy")
-          .partitionBy("date_partition")
+          .format("kafka")
+          .option("kafka.bootstrap.servers", kafkaBootstrapServers)
+          .option("topic", kafkaOutputTopic)
           .save()
       }
       .option("checkpointLocation", checkpointsPath)
       .trigger(Trigger.ProcessingTime("1 second"))
       .start()
+
+    // WRITE TO LOCAL FILE
+//    df.writeStream
+//      .outputMode("append")
+//      .foreachBatch { (batchDF: DataFrame, batchId: Long) =>
+//
+//        // Define the window specification
+//        val windowSpecDedup = Window.partitionBy("order_id").orderBy("created_at")
+//          .rowsBetween(Window.unboundedPreceding, Window.unboundedFollowing)
+//
+//        // Add a new column 'isClosed' which will be true if the last status in the window is 'CLOSED'
+//        val dedupDF = batchDF.withColumn("isClosed", when(last(col("status")).over(windowSpecDedup) === "CLOSED", true).otherwise(false)).dropDuplicates("order_id", "created_at")
+//
+//        val openDedupDF = dedupDF.filter((col("status") === "OPEN") && (col("isClosed") === false))
+//
+//        // Define the window specification
+//        val windowSpecCumSum = Window.partitionBy("order_side").orderBy("created_at")
+//          .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+//
+//        // Calculate the cumulative sum within each partition defined by 'order_side'
+//        val cumulativeSumDF = openDedupDF
+//          .withColumn("cum_sum", sum($"total").over(windowSpecCumSum))
+//
+//        val selectedBatchDF = cumulativeSumDF
+//          .select(
+//            col("symbol"),
+//            col("order_side").alias("side"),
+//            col("price"),
+//            col("size").alias("amount"), // Assuming you meant "size" as the original field for "amount"
+//            col("total"),
+//            col("cum_sum"),
+//            col("date_partition")
+//          )
+//
+//        // Then write the sorted batch to a sink, for example, to parquet files
+//        selectedBatchDF
+//          .write
+//          .mode("append")
+//          .format("parquet")
+//          .option("path", outputPath)
+//          .option("compression", "snappy")
+//          .partitionBy("date_partition")
+//          .save()
+//      }
+//      .option("checkpointLocation", checkpointsPath)
+//      .trigger(Trigger.ProcessingTime("1 second"))
+//      .start()
   }
 
   // Function to fetch schema from Schema Registry
